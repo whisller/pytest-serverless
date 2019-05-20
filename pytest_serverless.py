@@ -16,11 +16,11 @@ def setup_mocks():
     with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
         serverless_yml = yaml.safe_load(f)
 
-    if not serverless_yml.get("resources", {}).get("Resources"):
-        return
-
-    for resource_name, resource_definition in serverless_yml["resources"]["Resources"].items():
+    for resource_name, resource_definition in serverless_yml.get("resources", {}).get("Resources", {}).items():
         if resource_definition.get("Type") == "AWS::DynamoDB::Table":
-            mock_dynamodb2().start()
+            dynamodb = mock_dynamodb2()
 
+            dynamodb.start()
             boto3.resource("dynamodb").create_table(**resource_definition["Properties"])
+            yield
+            dynamodb.stop()
