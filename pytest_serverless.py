@@ -22,11 +22,13 @@ def setup_mocks():
     results = re.findall(r"(\${self:(.*)})", serverless_yml_content)
 
     for result in results:
-        serverless_yml_content = serverless_yml_content.replace(result[0], eval(f"my_box.{result[1]}"))
+        serverless_yml_content = serverless_yml_content.replace(
+            result[0], eval(f"my_box.{result[1]}")
+        )
 
     serverless_yml_dict = yaml.safe_load(serverless_yml_content)
     for resource_name, resource_definition in (
-            serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
+        serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
     ):
         if resource_definition.get("Type") == "AWS::DynamoDB::Table":
             dynamodb = mock_dynamodb2()
