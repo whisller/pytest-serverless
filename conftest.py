@@ -1,6 +1,6 @@
 import os
 
-pytest_plugins = ["pytester", "pytest_serverless"]
+pytest_plugins = ["pytester"]
 
 os.environ["AWS_DEFAULT_REGION"] = "eu-west-1"
 os.environ["AWS_ACCESS_KEY_ID"] = "foobar_key"
