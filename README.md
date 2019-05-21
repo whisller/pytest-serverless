@@ -1,6 +1,11 @@
 # pytest-serverless
 Mock local resources for serverless framework.
 
+## Installation
+```sh
+pip install pytest-serverless
+```
+
 ## What problem it tries to solve?
 When building your project with [serverless](https://serverless.com/) most likely you will create
 [resources](https://serverless.com/framework/docs/providers/aws/guide/resources/) like dynamodb tables, sqs queues, sns topics.
@@ -16,4 +21,4 @@ mocks of resources for you.
 ## Issues?
 Plugin is in early stage of development, so you might find some bugs or missing functionality.
 
-If possible create pull request that fixes particular problem.
+If possible create pull request (with tests) that fixes particular problem.
