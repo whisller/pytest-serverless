@@ -1,8 +1,18 @@
 [tool.poetry]
 name = "pytest-serverless"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Automatically mocks resources from serverless.yml file."
 authors = ["Daniel Ancuta <whisller@gmail.com>"]
+readme = "README.md"
+include = ["LICENCE", "README.md"]
+homepage = "https://github.com/whisller/pytest-serverless"
+repository = "https://github.com/whisller/pytest-serverless"
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3 :: Only"
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
@@ -21,4 +31,3 @@ black = "=19.3b0"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
-
