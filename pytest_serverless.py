@@ -7,11 +7,10 @@ from moto import mock_dynamodb2
 import pytest
 import yaml
 
-is_serverless = os.path.isfile("serverless.yml")
-
 
 @pytest.fixture(autouse=True)
 def setup_mocks():
+    is_serverless = os.path.isfile("serverless.yml")
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
 
@@ -19,7 +18,7 @@ def setup_mocks():
         serverless_yml_content = f.read()
 
     my_box = Box.from_yaml(serverless_yml_content)
-    results = re.findall(r"(\${self:(.*)})", serverless_yml_content)
+    results = find_self_variables_to_replace(serverless_yml_content)
 
     for result in results:
         serverless_yml_content = serverless_yml_content.replace(
@@ -37,3 +36,7 @@ def setup_mocks():
             boto3.resource("dynamodb").create_table(**resource_definition["Properties"])
             yield
             dynamodb.stop()
+
+
+def find_self_variables_to_replace(content):
+    return re.findall(r"(\${self:([a-zA-Z.]+)})", content)

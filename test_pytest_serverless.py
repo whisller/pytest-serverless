@@ -1,3 +1,8 @@
+import pytest
+
+from pytest_serverless import find_self_variables_to_replace
+
+
 class TestGeneral:
     def test_it_replaces_local_variable_with_its_value(self, testdir):
         with open(testdir.tmpdir + "/serverless.yml", "w") as f:
@@ -106,3 +111,29 @@ class TestDynamoDb:
 
         result = testdir.runpytest()
         result.assert_outcomes(passed=1)
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        ("apiName: ${self:service}", [("${self:service}", "service")]),
+        (
+            "stackName: ${self:service}-${self:provider.stage}",
+            [
+                ("${self:service}", "service"),
+                ("${self:provider.stage}", "provider.stage"),
+            ],
+        ),
+        (
+            'name: ${self:custom.variables.deploymentDomain}"',
+            [
+                (
+                    "${self:custom.variables.deploymentDomain}",
+                    "custom.variables.deploymentDomain",
+                )
+            ],
+        ),
+    ],
+)
+def test_find_self_variables_to_replace(test_input, expected):
+    assert find_self_variables_to_replace(test_input) == expected
