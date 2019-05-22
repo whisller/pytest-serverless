@@ -3,13 +3,12 @@ import re
 
 import boto3
 from box import Box
-from moto import mock_dynamodb2
 import pytest
 import yaml
 
 
-@pytest.fixture(autouse=True)
-def setup_mocks():
+@pytest.fixture()
+def serverless():
     is_serverless = os.path.isfile("serverless.yml")
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
@@ -37,6 +36,8 @@ def setup_mocks():
             dynamodb_tables.append(resource_definition["Properties"])
 
     if dynamodb_tables:
+        from moto import mock_dynamodb2
+
         dynamodb = mock_dynamodb2()
         dynamodb.start()
 
