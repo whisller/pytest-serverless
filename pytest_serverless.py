@@ -17,15 +17,18 @@ def setup_mocks():
     with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
         serverless_yml_content = f.read()
 
-    my_box = Box.from_yaml(serverless_yml_content)
-    results = find_self_variables_to_replace(serverless_yml_content)
-
-    for result in results:
-        serverless_yml_content = serverless_yml_content.replace(
-            result[0], eval(f"my_box.{result[1]}")
-        )
-
     serverless_yml_dict = yaml.safe_load(serverless_yml_content)
+    resources = yaml.safe_dump(serverless_yml_dict.get("resources"))
+
+    my_box = Box.from_yaml(serverless_yml_content)
+    variables_to_replace = find_self_variables_to_replace(resources)
+
+    for variable in variables_to_replace:
+        resources = resources.replace(
+            variable[0], eval(f"my_box.{variable[1]}")
+        )
+    serverless_yml_dict["resources"] = yaml.safe_load(resources)
+
     for resource_name, resource_definition in (
         serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
     ):
