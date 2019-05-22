@@ -23,9 +23,7 @@ def serverless():
     variables_to_replace = find_self_variables_to_replace(resources)
 
     for variable in variables_to_replace:
-        resources = resources.replace(
-            variable[0], eval(f"my_box.{variable[1]}")
-        )
+        resources = resources.replace(variable[0], eval(f"my_box.{variable[1]}"))
     serverless_yml_dict["resources"] = yaml.safe_load(resources)
 
     dynamodb_tables = []

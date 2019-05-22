@@ -205,20 +205,20 @@ class TestDynamoDb:
     [
         ("apiName: ${self:service}", [("${self:service}", "service")]),
         (
-                "stackName: ${self:service}-${self:provider.stage}",
-                [
-                    ("${self:service}", "service"),
-                    ("${self:provider.stage}", "provider.stage"),
-                ],
+            "stackName: ${self:service}-${self:provider.stage}",
+            [
+                ("${self:service}", "service"),
+                ("${self:provider.stage}", "provider.stage"),
+            ],
         ),
         (
-                'name: ${self:custom.variables.deploymentDomain}"',
-                [
-                    (
-                            "${self:custom.variables.deploymentDomain}",
-                            "custom.variables.deploymentDomain",
-                    )
-                ],
+            'name: ${self:custom.variables.deploymentDomain}"',
+            [
+                (
+                    "${self:custom.variables.deploymentDomain}",
+                    "custom.variables.deploymentDomain",
+                )
+            ],
         ),
     ],
 )
