@@ -29,16 +29,23 @@ def setup_mocks():
         )
     serverless_yml_dict["resources"] = yaml.safe_load(resources)
 
+    dynamodb_tables = []
     for resource_name, resource_definition in (
         serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
     ):
         if resource_definition.get("Type") == "AWS::DynamoDB::Table":
-            dynamodb = mock_dynamodb2()
+            dynamodb_tables.append(resource_definition["Properties"])
 
-            dynamodb.start()
-            boto3.resource("dynamodb").create_table(**resource_definition["Properties"])
-            yield
-            dynamodb.stop()
+    if dynamodb_tables:
+        dynamodb = mock_dynamodb2()
+        dynamodb.start()
+
+        for table_definition in dynamodb_tables:
+            boto3.resource("dynamodb").create_table(**table_definition)
+
+        yield
+
+        dynamodb.stop()
 
 
 def find_self_variables_to_replace(content):
