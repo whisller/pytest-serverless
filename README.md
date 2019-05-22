@@ -15,6 +15,20 @@ During writing tests you will have to mock those in [moto](https://github.com/sp
 This pytest plugin tries to automate this process by reading `serverless.yml` file and create
 mocks of resources for you.
 
+## Usage
+Mark your test with `@pytest.mark.usefixtures("serverless")`, and rest will be done by plugin.
+```python
+import boto3
+import pytest
+
+
+@pytest.mark.usefixtures("serverless")
+def test():
+    table = boto3.resource("dynamodb").Table("my-microservice.my-table")
+    count_of_items = len(table.scan()["Items"])
+    assert count_of_items == 0
+```
+
 ## Supported resources
 ### AWS::DynamoDB::Table
 
