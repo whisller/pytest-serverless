@@ -44,7 +44,10 @@ def serverless():
 
         yield
 
-        dynamodb.stop()
+        for table_definition in dynamodb_tables:
+            boto3.client("dynamodb").delete_table(
+                TableName=table_definition["TableName"]
+            )
 
 
 def find_self_variables_to_replace(content):

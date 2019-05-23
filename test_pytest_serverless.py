@@ -43,7 +43,10 @@ class TestGeneral:
         testdir.makepyfile(
             """
             import boto3
+            import pytest
 
+
+            @pytest.mark.usefixtures("serverless")
             def test():
                 table = boto3.resource("dynamodb").Table("my-microservice.my-table")
                 count_of_items = len(table.scan()["Items"])
@@ -97,7 +100,10 @@ class TestDynamoDb:
         testdir.makepyfile(
             """
             import boto3
+            import pytest
 
+
+            @pytest.mark.usefixtures("serverless")
             def test():
                 table = boto3.resource("dynamodb").Table("my-microservice.my-table")
                 count_of_items = len(table.scan()["Items"])
@@ -112,7 +118,7 @@ class TestDynamoDb:
         result = testdir.runpytest()
         result.assert_outcomes(passed=1)
 
-    def test_it_creates_multiple_tables(self, testdir):
+    def test_it_creates_database_tables(self, testdir):
         with open(testdir.tmpdir + "/serverless.yml", "w") as f:
             f.write(
                 """resources:
@@ -176,7 +182,10 @@ class TestDynamoDb:
         testdir.makepyfile(
             """
             import boto3
+            import pytest
 
+
+            @pytest.mark.usefixtures("serverless")
             def test():
                 table = boto3.resource("dynamodb").Table("my-microservice.my-table")
                 count_of_items = len(table.scan()["Items"])
