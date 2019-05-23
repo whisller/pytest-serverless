@@ -8,6 +8,7 @@ include = ["LICENCE", "README.md"]
 homepage = "https://github.com/whisller/pytest-serverless"
 repository = "https://github.com/whisller/pytest-serverless"
 license="MIT"
+keywords=["pytest", "serverless", "moto", "boto3"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python",
