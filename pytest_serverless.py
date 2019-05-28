@@ -1,5 +1,6 @@
 import os
 import re
+from collections import defaultdict
 
 import boto3
 from box import Box
@@ -16,39 +17,96 @@ def serverless():
     with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
         serverless_yml_content = f.read()
 
-    serverless_yml_dict = yaml.safe_load(serverless_yml_content)
-    resources = yaml.safe_dump(serverless_yml_dict.get("resources"))
+    serverless_yml_dict = replace_variables(serverless_yml_content)
 
-    my_box = Box.from_yaml(serverless_yml_content)
-    variables_to_replace = find_self_variables_to_replace(resources)
+    actions_before = []
+    actions_after = []
 
-    for variable in variables_to_replace:
-        resources = resources.replace(variable[0], eval(f"my_box.{variable[1]}"))
-    serverless_yml_dict["resources"] = yaml.safe_load(resources)
-
-    dynamodb_tables = []
-    for resource_name, resource_definition in (
+    resources = defaultdict(list)
+    for resource_name, definition in (
         serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
     ):
-        if resource_definition.get("Type") == "AWS::DynamoDB::Table":
-            dynamodb_tables.append(resource_definition["Properties"])
+        resources[definition["Type"]].append(definition)
 
-    if dynamodb_tables:
-        from moto import mock_dynamodb2
+    if resources.get("AWS::DynamoDB::Table"):
+        dynamodb = handle_dynamodb_table(resources["AWS::DynamoDB::Table"])
 
-        dynamodb = mock_dynamodb2()
+        actions_before.append(dynamodb[0])
+        actions_after.append(dynamodb[1])
+
+    if resources.get("AWS::SQS::Queue"):
+        sqs = handle_sqs_queue(resources["AWS::SQS::Queue"])
+
+        actions_before.append(sqs[0])
+        actions_after.append(sqs[1])
+
+    for action in actions_before:
+        action()
+
+    yield
+
+    for action in actions_after:
+        action()
+
+
+def handle_dynamodb_table(resources):
+    from moto import mock_dynamodb2
+
+    dynamodb = mock_dynamodb2()
+
+    def before():
         dynamodb.start()
 
-        for table_definition in dynamodb_tables:
-            boto3.resource("dynamodb").create_table(**table_definition)
+        for resource_definition in resources:
+            boto3.resource("dynamodb").create_table(**resource_definition["Properties"])
 
-        yield
-
-        for table_definition in dynamodb_tables:
+    def after():
+        for resource_definition in resources:
             boto3.client("dynamodb").delete_table(
-                TableName=table_definition["TableName"]
+                TableName=resource_definition["Properties"]["TableName"]
             )
+
+        dynamodb.stop()
+
+    return before, after
+
+
+def handle_sqs_queue(resources):
+    from moto import mock_sqs
+
+    sqs = mock_sqs()
+
+    def before():
+        sqs.start()
+
+        for resource_definition in resources:
+            boto3.resource("sqs").create_queue(**resource_definition["Properties"])
+
+    def after():
+        sqs_client = boto3.client("sqs")
+        for resource_definition in resources:
+            sqs_client.delete_queue(
+                QueueUrl=sqs_client.get_queue_url(
+                    QueueName=resource_definition["Properties"]["QueueName"]
+                )["QueueUrl"]
+            )
+
+        sqs.stop()
+
+    return before, after
 
 
 def find_self_variables_to_replace(content):
     return re.findall(r"(\${self:([a-zA-Z.]+)})", content)
+
+
+def replace_variables(serverless_yml_content):
+    my_box = Box.from_yaml(serverless_yml_content)
+    variables_to_replace = find_self_variables_to_replace(serverless_yml_content)
+
+    for variable in variables_to_replace:
+        serverless_yml_content = serverless_yml_content.replace(
+            variable[0], eval(f"my_box.{variable[1]}")
+        )
+
+    return yaml.safe_load(serverless_yml_content)
