@@ -1,212 +1,42 @@
+import boto3
 import pytest
 
 from pytest_serverless import find_self_variables_to_replace
 
 
 class TestGeneral:
-    def test_it_replaces_local_variable_with_its_value(self, testdir):
-        with open(testdir.tmpdir + "/serverless.yml", "w") as f:
-            f.write(
-                """
-    service: my-microservice
-    resources:
-      Resources:
-        TableA:
-          Type: 'AWS::DynamoDB::Table'
-          DeletionPolicy: Delete
-          Properties:
-            TableName: ${self:service}.my-table
-            AttributeDefinitions:
-              - AttributeName: id
-                AttributeType: S
-              - AttributeName: company_id
-                AttributeType: S
-            KeySchema:
-              - AttributeName: id
-                KeyType: HASH
-            GlobalSecondaryIndexes:
-              - IndexName: company_id
-                KeySchema:
-                  - AttributeName: company_id
-                    KeyType: HASH
-                Projection:
-                  ProjectionType: ALL
-                ProvisionedThroughput:
-                  ReadCapacityUnits: 10
-                  WriteCapacityUnits: 30
-            ProvisionedThroughput:
-              ReadCapacityUnits: 10
-              WriteCapacityUnits: 30"""
-            )
+    @pytest.mark.usefixtures("serverless")
+    def test_it_replaces_local_variable_with_its_value(self):
+        table = boto3.resource("dynamodb").Table("my-microservice.my-table")
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 0
 
-        testdir.makeconftest('pytest_plugins = ["pytest_serverless"]')
-        testdir.makepyfile(
-            """
-            import boto3
-            import pytest
-
-
-            @pytest.mark.usefixtures("serverless")
-            def test():
-                table = boto3.resource("dynamodb").Table("my-microservice.my-table")
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 0
-
-                table.put_item(Item={"id": "my-id"})
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 1
-            """
-        )
-
-        result = testdir.runpytest()
-        result.assert_outcomes(passed=1)
+        table.put_item(Item={"id": "my-id"})
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 1
 
 
 class TestDynamoDb:
-    def test_it_creates_database_table(self, testdir):
-        with open(testdir.tmpdir + "/serverless.yml", "w") as f:
-            f.write(
-                """resources:
-      Resources:
-        TableA:
-          Type: 'AWS::DynamoDB::Table'
-          DeletionPolicy: Delete
-          Properties:
-            TableName: my-microservice.my-table
-            AttributeDefinitions:
-              - AttributeName: id
-                AttributeType: S
-              - AttributeName: company_id
-                AttributeType: S
-            KeySchema:
-              - AttributeName: id
-                KeyType: HASH
-            GlobalSecondaryIndexes:
-              - IndexName: company_id
-                KeySchema:
-                  - AttributeName: company_id
-                    KeyType: HASH
-                Projection:
-                  ProjectionType: ALL
-                ProvisionedThroughput:
-                  ReadCapacityUnits: 10
-                  WriteCapacityUnits: 30
-            ProvisionedThroughput:
-              ReadCapacityUnits: 10
-              WriteCapacityUnits: 30"""
-            )
+    @pytest.mark.parametrize(
+        "table_name", ["my-microservice.my-table", "my-microservice-second.my-table"]
+    )
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_database_tables(self, table_name):
+        table = boto3.resource("dynamodb").Table(table_name)
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 0
 
-        testdir.makeconftest('pytest_plugins = ["pytest_serverless"]')
-        testdir.makepyfile(
-            """
-            import boto3
-            import pytest
+        table.put_item(Item={"id": "my-id"})
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 1
 
 
-            @pytest.mark.usefixtures("serverless")
-            def test():
-                table = boto3.resource("dynamodb").Table("my-microservice.my-table")
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 0
-
-                table.put_item(Item={"id": "my-id"})
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 1
-            """
-        )
-
-        result = testdir.runpytest()
-        result.assert_outcomes(passed=1)
-
-    def test_it_creates_database_tables(self, testdir):
-        with open(testdir.tmpdir + "/serverless.yml", "w") as f:
-            f.write(
-                """resources:
-      Resources:
-        TableA:
-          Type: 'AWS::DynamoDB::Table'
-          DeletionPolicy: Delete
-          Properties:
-            TableName: my-microservice.my-table
-            AttributeDefinitions:
-              - AttributeName: id
-                AttributeType: S
-              - AttributeName: company_id
-                AttributeType: S
-            KeySchema:
-              - AttributeName: id
-                KeyType: HASH
-            GlobalSecondaryIndexes:
-              - IndexName: company_id
-                KeySchema:
-                  - AttributeName: company_id
-                    KeyType: HASH
-                Projection:
-                  ProjectionType: ALL
-                ProvisionedThroughput:
-                  ReadCapacityUnits: 10
-                  WriteCapacityUnits: 30
-            ProvisionedThroughput:
-              ReadCapacityUnits: 10
-              WriteCapacityUnits: 30
-        TableB:
-          Type: 'AWS::DynamoDB::Table'
-          DeletionPolicy: Delete
-          Properties:
-            TableName: my-microservice-second.my-table
-            AttributeDefinitions:
-              - AttributeName: id
-                AttributeType: S
-              - AttributeName: company_id
-                AttributeType: S
-            KeySchema:
-              - AttributeName: id
-                KeyType: HASH
-            GlobalSecondaryIndexes:
-              - IndexName: company_id
-                KeySchema:
-                  - AttributeName: company_id
-                    KeyType: HASH
-                Projection:
-                  ProjectionType: ALL
-                ProvisionedThroughput:
-                  ReadCapacityUnits: 10
-                  WriteCapacityUnits: 30
-            ProvisionedThroughput:
-              ReadCapacityUnits: 10
-              WriteCapacityUnits: 30
-              """
-            )
-
-        testdir.makeconftest('pytest_plugins = ["pytest_serverless"]')
-        testdir.makepyfile(
-            """
-            import boto3
-            import pytest
-
-
-            @pytest.mark.usefixtures("serverless")
-            def test():
-                table = boto3.resource("dynamodb").Table("my-microservice.my-table")
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 0
-
-                table.put_item(Item={"id": "my-id"})
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 1
-                
-                table = boto3.resource("dynamodb").Table("my-microservice-second.my-table")
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 0
-
-                table.put_item(Item={"id": "my-id"})
-                count_of_items = len(table.scan()["Items"])
-                assert count_of_items == 1
-            """
-        )
-
-        result = testdir.runpytest()
-        result.assert_outcomes(passed=1)
+class TestSqs:
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_sqs_queue(self):
+        sqs_client = boto3.client("sqs")
+        response = sqs_client.get_queue_url(QueueName="my-super-queue")
+        assert "my-super-queue" in response["QueueUrl"]
 
 
 @pytest.mark.parametrize(
