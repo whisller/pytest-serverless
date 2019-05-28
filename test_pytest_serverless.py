@@ -119,5 +119,26 @@ resources:
         ],
     )
     def test_it_replaces_variables(self, test_input, expected):
+        assert replace_variables(test_input) == yaml.safe_load(expected)
 
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            (
+                """provider:
+deploymentBucket:
+  name: ${self:custom.variables.deploymentDomain}
+custom:
+  variables: ${file(./variables.yml):${opt:stage, 'dev'}}
+  other: ${self.custom.does_not_exist}""",
+                """provider:
+deploymentBucket:
+  name: ${self:custom.variables.deploymentDomain}
+custom:
+  variables: ${file(./variables.yml):${opt:stage, 'dev'}}
+  other: ${self.custom.does_not_exist}""",
+            )
+        ],
+    )
+    def test_it_handles_unsupported_variables(self, test_input, expected):
         assert replace_variables(test_input) == yaml.safe_load(expected)

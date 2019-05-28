@@ -104,8 +104,10 @@ def replace_variables(serverless_yml_content):
     variables_to_replace = find_self_variables_to_replace(serverless_yml_content)
     for variable in variables_to_replace:
         my_box = Box.from_yaml(serverless_yml_content)
-        serverless_yml_content = serverless_yml_content.replace(
-            variable[0], eval(f"my_box.{variable[1]}")
-        )
+        try:
+            value = eval(f"my_box.{variable[1]}")
+            serverless_yml_content = serverless_yml_content.replace(variable[0], value)
+        except AttributeError:
+            pass
 
     return yaml.safe_load(serverless_yml_content)
