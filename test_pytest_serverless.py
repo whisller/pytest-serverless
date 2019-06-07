@@ -2,7 +2,12 @@ import boto3
 import pytest
 import yaml
 
-from pytest_serverless import find_self_variables_to_replace, replace_variables
+from pytest_serverless import (
+    find_self_variables_to_replace,
+    replace_self_variables,
+    find_env_variables_to_replace,
+    remove_env_variables,
+)
 
 
 class TestGeneral:
@@ -74,7 +79,7 @@ def test_find_self_variables_to_replace(test_input, expected):
     assert find_self_variables_to_replace(test_input) == expected
 
 
-class TestReplaceVariables:
+class TestReplaceSelfVariables:
     @pytest.mark.parametrize(
         "test_input,expected",
         [
@@ -119,7 +124,7 @@ resources:
         ],
     )
     def test_it_replaces_variables(self, test_input, expected):
-        assert replace_variables(test_input) == yaml.safe_load(expected)
+        assert replace_self_variables(test_input) == yaml.safe_load(expected)
 
     @pytest.mark.parametrize(
         "test_input,expected",
@@ -141,4 +146,32 @@ custom:
         ],
     )
     def test_it_handles_unsupported_variables(self, test_input, expected):
-        assert replace_variables(test_input) == yaml.safe_load(expected)
+        assert replace_self_variables(test_input) == yaml.safe_load(expected)
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (
+            "service: my-service${env:FEATURE_BRANCH, ''}",
+            [("${env:FEATURE_BRANCH, ''}", "FEATURE_BRANCH", " ''")],
+        ),
+        (
+            "service: my-service${env:FEATURE_BRANCH}",
+            [("${env:FEATURE_BRANCH}", "FEATURE_BRANCH", "")],
+        ),
+    ],
+)
+def test_find_env_variables_to_replace(test_input, expected):
+    assert find_env_variables_to_replace(test_input) == expected
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        ("service: my-service${env:FEATURE_BRANCH, ''}", "service: my-service"),
+        ("service: my-service${env:FEATURE_BRANCH}", "service: my-service"),
+    ],
+)
+def test_it_removes_unsupported_variables(test_input, expected):
+    assert remove_env_variables(test_input) == expected

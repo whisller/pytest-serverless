@@ -17,7 +17,8 @@ def serverless():
     with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
         serverless_yml_content = f.read()
 
-    serverless_yml_dict = replace_variables(serverless_yml_content)
+    serverless_yml_content = remove_env_variables(serverless_yml_content)
+    serverless_yml_dict = replace_self_variables(serverless_yml_content)
 
     actions_before = []
     actions_after = []
@@ -100,7 +101,7 @@ def find_self_variables_to_replace(content):
     return re.findall(r"(\${self:([a-zA-Z._\-]+)})", content)
 
 
-def replace_variables(serverless_yml_content):
+def replace_self_variables(serverless_yml_content):
     variables_to_replace = find_self_variables_to_replace(serverless_yml_content)
     for variable in variables_to_replace:
         my_box = Box.from_yaml(serverless_yml_content)
@@ -111,3 +112,15 @@ def replace_variables(serverless_yml_content):
             pass
 
     return yaml.safe_load(serverless_yml_content)
+
+
+def find_env_variables_to_replace(content):
+    return re.findall(r"(\${env:([a-zA-Z._\-]+),?(.*)})", content)
+
+
+def remove_env_variables(serverless_yml_content):
+    variables_to_replace = find_env_variables_to_replace(serverless_yml_content)
+    for variable in variables_to_replace:
+        serverless_yml_content = serverless_yml_content.replace(variable[0], "")
+
+    return serverless_yml_content
