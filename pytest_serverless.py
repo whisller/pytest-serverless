@@ -106,7 +106,7 @@ def replace_self_variables(serverless_yml_content):
     for variable in variables_to_replace:
         my_box = Box.from_yaml(serverless_yml_content)
         try:
-            value = eval(f"my_box.{variable[1]}")
+            value = str(eval(f"my_box.{variable[1]}"))
             serverless_yml_content = serverless_yml_content.replace(variable[0], value)
         except AttributeError:
             pass
