@@ -8,49 +8,7 @@ import pytest
 import yaml
 
 
-@pytest.fixture()
-def serverless():
-    is_serverless = os.path.isfile("serverless.yml")
-    if not is_serverless:
-        raise Exception("No serverless.yml file found!")
-
-    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
-        serverless_yml_content = f.read()
-
-    serverless_yml_content = remove_env_variables(serverless_yml_content)
-    serverless_yml_dict = replace_self_variables(serverless_yml_content)
-
-    actions_before = []
-    actions_after = []
-
-    resources = defaultdict(list)
-    for resource_name, definition in (
-        serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
-    ):
-        resources[definition["Type"]].append(definition)
-
-    if resources.get("AWS::DynamoDB::Table"):
-        dynamodb = handle_dynamodb_table(resources["AWS::DynamoDB::Table"])
-
-        actions_before.append(dynamodb[0])
-        actions_after.append(dynamodb[1])
-
-    if resources.get("AWS::SQS::Queue"):
-        sqs = handle_sqs_queue(resources["AWS::SQS::Queue"])
-
-        actions_before.append(sqs[0])
-        actions_after.append(sqs[1])
-
-    for action in actions_before:
-        action()
-
-    yield
-
-    for action in actions_after:
-        action()
-
-
-def handle_dynamodb_table(resources):
+def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb2
 
     dynamodb = mock_dynamodb2()
@@ -72,7 +30,7 @@ def handle_dynamodb_table(resources):
     return before, after
 
 
-def handle_sqs_queue(resources):
+def _handle_sqs_queue(resources):
     from moto import mock_sqs
 
     sqs = mock_sqs()
@@ -95,6 +53,48 @@ def handle_sqs_queue(resources):
         sqs.stop()
 
     return before, after
+
+
+SUPPORTED_RESOURCES = {
+    "AWS::DynamoDB::Table": _handle_dynamodb_table,
+    "AWS::SQS::Queue": _handle_sqs_queue,
+}
+
+
+@pytest.fixture()
+def serverless():
+    is_serverless = os.path.isfile("serverless.yml")
+    if not is_serverless:
+        raise Exception("No serverless.yml file found!")
+
+    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
+        serverless_yml_content = f.read()
+
+    serverless_yml_content = remove_env_variables(serverless_yml_content)
+    serverless_yml_dict = replace_self_variables(serverless_yml_content)
+
+    actions_before = []
+    actions_after = []
+
+    resources = defaultdict(list)
+    for resource_name, definition in (
+        serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
+    ):
+        resources[definition["Type"]].append(definition)
+
+    for resource_name, resource_function in SUPPORTED_RESOURCES.items():
+        if resources.get(resource_name):
+            resource = resource_function(resources[resource_name])
+            actions_before.append(resource[0])
+            actions_after.append(resource[1])
+
+    for action in actions_before:
+        action()
+
+    yield
+
+    for action in actions_after:
+        action()
 
 
 def find_self_variables_to_replace(content):
