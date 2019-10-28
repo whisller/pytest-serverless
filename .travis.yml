@@ -4,7 +4,7 @@ python:
 before_install:
   - "export BOTO_CONFIG=/dev/null" # https://github.com/travis-ci/travis-ci/issues/7940
   - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py > get-poetry.py
-  - python get-poetry.py --preview --yes
+  - python get-poetry.py --version 1.0.0a2 --yes
 install:
   - ~/.poetry/bin/poetry install
   - pip uninstall pytest-serverless --yes
