@@ -10,6 +10,10 @@ before_install:
 install:
   - ~/.poetry/bin/poetry install
   - pip uninstall pytest-serverless --yes
+  - ~/.poetry/bin/poetry run pip install pytest==$PYTEST_VERSION
 script:
-  - "~/.poetry/bin/poetry run black --check ."
-  - "~/.poetry/bin/poetry run pytest -vv"
+  - ~/.poetry/bin/poetry run pytest
+env:
+  - PYTEST_VERSION=3.10.1
+  - PYTEST_VERSION=4.6.6
+  - PYTEST_VERSION=5.2.4
