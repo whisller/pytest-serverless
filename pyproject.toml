@@ -34,7 +34,7 @@ boto3 = "^1.9"
 python-box = "^3.4"
 
 [tool.poetry.dev-dependencies]
-black = "=19.3b0"
+black = "=19.10b0"
 
 [tool.poetry.plugins."pytest11"]
 "serverless" = "pytest_serverless"
