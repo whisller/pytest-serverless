@@ -10,7 +10,7 @@ repository = "https://github.com/whisller/pytest-serverless"
 license="MIT"
 keywords=["pytest", "serverless", "moto", "boto3"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
@@ -20,6 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Mocking",
+    "Topic :: Software Development :: Testing :: Unit"
 ]
 
 [tool.poetry.dependencies]
