@@ -3,7 +3,7 @@ pytest-serverless
 Mock local resources for serverless framework.
 
 | master | PyPI | Python | pytest | Licence |
-| --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | [![Build Status](https://travis-ci.org/whisller/pytest-serverless.svg?branch=master)](https://travis-ci.org/whisller/pytest-serverless) | [![PyPI](https://img.shields.io/pypi/v/pytest-serverless.svg)](https://pypi.org/project/pytest-serverless/) | ![](https://img.shields.io/pypi/pyversions/pytest-serverless.svg) | `3.10.1`, `4.6.6`, `5.2.4` | ![](https://img.shields.io/pypi/l/pytest-serverless.svg) |
 
 
