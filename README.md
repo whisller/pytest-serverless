@@ -18,10 +18,43 @@ When building your project with [serverless](https://serverless.com/) most likel
 During writing tests you will have to mock those in [moto](https://github.com/spulec/moto). 
 
 This pytest plugin tries to automate this process by reading `serverless.yml` file and create
-mocks of resources for you.
+moto mocks of resources for you.
 
 ## Usage
-Mark your test with `@pytest.mark.usefixtures("serverless")`, and rest will be done by plugin.
+Assuming your `serverless.yml` file looks like:
+```yaml
+service: my-microservice
+resources:
+ Resources:
+   TableA:
+     Type: 'AWS::DynamoDB::Table'
+     DeletionPolicy: Delete
+     Properties:
+       TableName: ${self:service}.my-table
+       AttributeDefinitions:
+         - AttributeName: id
+           AttributeType: S
+         - AttributeName: company_id
+           AttributeType: S
+       KeySchema:
+         - AttributeName: id
+           KeyType: HASH
+       GlobalSecondaryIndexes:
+         - IndexName: company_id
+           KeySchema:
+             - AttributeName: company_id
+               KeyType: HASH
+           Projection:
+             ProjectionType: ALL
+           ProvisionedThroughput:
+             ReadCapacityUnits: 10
+             WriteCapacityUnits: 30
+       ProvisionedThroughput:
+         ReadCapacityUnits: 10
+         WriteCapacityUnits: 30
+```
+
+To start using `my-microservice.my-table` table in your tests just mark your test with `@pytest.mark.usefixtures("serverless")`, and rest will be done by plugin.
 ```python
 import boto3
 import pytest
