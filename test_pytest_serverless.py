@@ -45,6 +45,15 @@ class TestSqs:
         assert "my-super-queue" in response["QueueUrl"]
 
 
+class TestS3:
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_s3_bucket(self):
+        s3_client = boto3.client("s3")
+        response = s3_client.get_bucket_versioning(Bucket="org-example.my-bucket")
+
+        assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [

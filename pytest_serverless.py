@@ -55,9 +55,41 @@ def _handle_sqs_queue(resources):
     return before, after
 
 
+def _handle_s3_bucket(resources):
+    from moto import mock_s3
+
+    s3 = mock_s3()
+
+    def before():
+        s3.start()
+
+        for resource_definition in resources:
+            if resource_definition["Properties"].get("BucketName"):
+                bucket = resource_definition["Properties"]["BucketName"]
+                del resource_definition["Properties"]["BucketName"]
+
+                boto3.resource("s3").create_bucket(
+                    Bucket=bucket, **resource_definition["Properties"]
+                )
+
+    def after():
+        s3_client = boto3.client("s3")
+
+        for resource_definition in resources:
+            if resource_definition["Properties"].get("BucketName"):
+                s3_client.delete_bucket(
+                    Bucket=resource_definition["Properties"]["BucketName"]
+                )
+
+        s3.stop()
+
+    return before, after
+
+
 SUPPORTED_RESOURCES = {
     "AWS::DynamoDB::Table": _handle_dynamodb_table,
     "AWS::SQS::Queue": _handle_sqs_queue,
+    "AWS::S3::Bucket": _handle_s3_bucket,
 }
 
 

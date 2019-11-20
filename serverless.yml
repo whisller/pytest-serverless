@@ -57,3 +57,7 @@ resources:
        ProvisionedThroughput:
          ReadCapacityUnits: 10
          WriteCapacityUnits: 30
+   S3Bucket:
+     Type: 'AWS::S3::Bucket'
+     Properties:
+       BucketName: "org-example.my-bucket"
