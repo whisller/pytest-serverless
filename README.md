@@ -73,6 +73,7 @@ def test():
 ## Supported resources
 ### AWS::DynamoDB::Table
 ### AWS::SQS::Queue
+### AWS::S3::Bucket
 
 ## Issues?
 Plugin is in early stage of development, so you might find some bugs or missing functionality.
