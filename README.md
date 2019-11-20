@@ -1,6 +1,6 @@
 pytest-serverless
 ---
-Mock local resources for serverless framework.
+Automatically mocks resources from serverless.yml in pytest using moto.
 
 | master | PyPI | Python | pytest | Licence |
 | --- | --- | --- | --- | --- |
