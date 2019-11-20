@@ -73,6 +73,7 @@ def test():
 ## Supported resources
 ### AWS::DynamoDB::Table
 ### AWS::SQS::Queue
+### AWS::SNS::Topic
 ### AWS::S3::Bucket
 
 ## Issues?
