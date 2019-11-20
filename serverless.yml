@@ -61,3 +61,7 @@ resources:
      Type: 'AWS::S3::Bucket'
      Properties:
        BucketName: "org-example.my-bucket"
+   SnsTopic:
+     Type: 'AWS::SNS::Topic'
+     Properties:
+       TopicName: "org-example-my-sns-topic"

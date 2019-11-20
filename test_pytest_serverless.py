@@ -54,6 +54,17 @@ class TestS3:
         assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
 
+class TestSns:
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_sns_topic(self):
+        sns_client = boto3.client("sns")
+        topic_arns = [arn["TopicArn"] for arn in sns_client.list_topics()["Topics"]]
+
+        assert (
+            "arn:aws:sns:eu-west-1:123456789012:org-example-my-sns-topic" in topic_arns
+        )
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [

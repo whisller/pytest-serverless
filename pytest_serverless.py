@@ -86,10 +86,44 @@ def _handle_s3_bucket(resources):
     return before, after
 
 
+def _handle_sns_topic(resources):
+    from moto import mock_sns
+
+    sns = mock_sns()
+
+    def before():
+        sns.start()
+
+        for resource_definition in resources:
+            if resource_definition["Properties"].get("TopicName"):
+                boto3.resource("sns").create_topic(
+                    Name=resource_definition["Properties"]["TopicName"]
+                )
+
+    def after():
+        sns_client = boto3.client("sns")
+
+        topic_arns = {
+            arn["TopicArn"].split(":")[-1]: arn["TopicArn"]
+            for arn in sns_client.list_topics()["Topics"]
+        }
+
+        for resource_definition in resources:
+            if resource_definition["Properties"].get("TopicName"):
+                sns_client.delete_topic(
+                    TopicArn=topic_arns[resource_definition["Properties"]["TopicName"]]
+                )
+
+        sns.stop()
+
+    return before, after
+
+
 SUPPORTED_RESOURCES = {
     "AWS::DynamoDB::Table": _handle_dynamodb_table,
     "AWS::SQS::Queue": _handle_sqs_queue,
     "AWS::S3::Bucket": _handle_s3_bucket,
+    "AWS::SNS::Topic": _handle_sns_topic,
 }
 
 
