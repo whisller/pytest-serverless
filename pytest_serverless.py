@@ -7,6 +7,8 @@ from box import Box
 import pytest
 import yaml
 
+_serverless_yml_dict = None
+
 
 def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb2
@@ -72,6 +74,8 @@ def _handle_s3_bucket(resources):
                     Bucket=bucket, **resource_definition["Properties"]
                 )
 
+                resource_definition["Properties"]["BucketName"] = bucket
+
     def after():
         s3_client = boto3.client("s3")
 
@@ -129,22 +133,16 @@ SUPPORTED_RESOURCES = {
 
 @pytest.fixture()
 def serverless():
-    is_serverless = os.path.isfile("serverless.yml")
-    if not is_serverless:
-        raise Exception("No serverless.yml file found!")
-
-    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
-        serverless_yml_content = f.read()
-
-    serverless_yml_content = remove_env_variables(serverless_yml_content)
-    serverless_yml_dict = replace_self_variables(serverless_yml_content)
+    global _serverless_yml_dict
+    if not _serverless_yml_dict:
+        _serverless_yml_dict = _load_file()
 
     actions_before = []
     actions_after = []
 
     resources = defaultdict(list)
     for resource_name, definition in (
-        serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
+            _serverless_yml_dict.get("resources", {}).get("Resources", {}).items()
     ):
         resources[definition["Type"]].append(definition)
 
@@ -161,6 +159,19 @@ def serverless():
 
     for action in actions_after:
         action()
+
+
+def _load_file():
+    is_serverless = os.path.isfile("serverless.yml")
+    if not is_serverless:
+        raise Exception("No serverless.yml file found!")
+
+    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
+        serverless_yml_content = f.read()
+
+    serverless_yml_dict = replace_self_variables(remove_env_variables(serverless_yml_content))
+
+    return serverless_yml_dict
 
 
 def find_self_variables_to_replace(content):
