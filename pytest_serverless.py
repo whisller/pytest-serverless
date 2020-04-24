@@ -41,7 +41,7 @@ def _handle_sqs_queue(resources):
         sqs.start()
 
         for resource_definition in resources:
-            boto3.resource("sqs").create_queue(**resource_definition["Properties"])
+            boto3.resource("sqs").create_queue(QueueName=resource_definition["Properties"]["QueueName"])
 
     def after():
         sqs_client = boto3.client("sqs")
