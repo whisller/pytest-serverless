@@ -5,6 +5,24 @@ resources:
      Type: "AWS::SQS::Queue"
      Properties:
        QueueName: my-super-queue
+   EventQueue2:
+     Type: "AWS::SQS::Queue"
+     Properties:
+       QueueName: my-super-queue2
+       DelaySeconds: 0
+       FifoQueue: false
+       KmsDataKeyReusePeriodSeconds: 300
+       MaximumMessageSize: 262144
+       MessageRetentionPeriod: 2000
+       ReceiveMessageWaitTimeSeconds: 0
+       RedrivePolicy: 
+         deadLetterTargetArn : "arn:aws:sqs:us-east-2:444455556666:queue1"
+         maxReceiveCount : 1
+       Tags: 
+         - 
+           key: "key1"
+           value: "value1"
+       VisibilityTimeout: 1000
    TableA:
      Type: 'AWS::DynamoDB::Table'
      DeletionPolicy: Delete
