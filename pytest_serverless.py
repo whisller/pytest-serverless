@@ -10,6 +10,15 @@ import yaml
 _serverless_yml_dict = None
 
 
+def _get_property(properties, property_names):
+    result = {}
+    for property_name in property_names:
+        if properties.get(property_name):
+            result[property_name] = properties.get(property_name)
+
+    return result
+
+
 def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb2
 
@@ -19,7 +28,23 @@ def _handle_dynamodb_table(resources):
         dynamodb.start()
 
         for resource_definition in resources:
-            boto3.resource("dynamodb").create_table(**resource_definition["Properties"])
+            boto3.resource("dynamodb").create_table(
+                **_get_property(
+                    resource_definition["Properties"],
+                    (
+                        "TableName",
+                        "AttributeDefinitions",
+                        "KeySchema",
+                        "LocalSecondaryIndexes",
+                        "GlobalSecondaryIndexes",
+                        "BillingMode",
+                        "ProvisionedThroughput",
+                        "StreamSpecification",
+                        "SSESpecification",
+                        "Tags",
+                    ),
+                )
+            )
 
     def after():
         for resource_definition in resources:
@@ -41,7 +66,9 @@ def _handle_sqs_queue(resources):
         sqs.start()
 
         for resource_definition in resources:
-            boto3.resource("sqs").create_queue(QueueName=resource_definition["Properties"]["QueueName"])
+            boto3.resource("sqs").create_queue(
+                QueueName=resource_definition["Properties"]["QueueName"]
+            )
 
     def after():
         sqs_client = boto3.client("sqs")
@@ -71,7 +98,20 @@ def _handle_s3_bucket(resources):
                 del resource_definition["Properties"]["BucketName"]
 
                 boto3.resource("s3").create_bucket(
-                    Bucket=bucket, **resource_definition["Properties"]
+                    Bucket=bucket,
+                    **_get_property(
+                        resource_definition["Properties"],
+                        (
+                            "CreateBucketConfiguration",
+                            "ACL",
+                            "GrantFullControl",
+                            "GrantRead",
+                            "GrantReadACP",
+                            "GrantWrite",
+                            "GrantWriteACP",
+                            "ObjectLockEnabledForBucket",
+                        ),
+                    ),
                 )
 
                 resource_definition["Properties"]["BucketName"] = bucket
