@@ -11,12 +11,7 @@ _serverless_yml_dict = None
 
 
 def _get_property(properties, property_names):
-    result = {}
-    for property_name in property_names:
-        if properties.get(property_name):
-            result[property_name] = properties.get(property_name)
-
-    return result
+    return {name: properties[name] for name in property_names if name in properties}
 
 
 def _handle_dynamodb_table(resources):
@@ -94,11 +89,8 @@ def _handle_s3_bucket(resources):
 
         for resource_definition in resources:
             if resource_definition["Properties"].get("BucketName"):
-                bucket = resource_definition["Properties"]["BucketName"]
-                del resource_definition["Properties"]["BucketName"]
-
                 boto3.resource("s3").create_bucket(
-                    Bucket=bucket,
+                    Bucket=resource_definition["Properties"]["BucketName"],
                     **_get_property(
                         resource_definition["Properties"],
                         (
@@ -113,8 +105,6 @@ def _handle_s3_bucket(resources):
                         ),
                     ),
                 )
-
-                resource_definition["Properties"]["BucketName"] = bucket
 
     def after():
         s3_client = boto3.client("s3")
