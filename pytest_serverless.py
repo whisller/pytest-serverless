@@ -19,7 +19,6 @@ def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb2
 
     dynamodb = mock_dynamodb2()
-    print('DynamoDBResources', resources)
 
     def before():
         dynamodb.start()
@@ -179,7 +178,6 @@ def serverless():
 
     for resource_name, resource_function in SUPPORTED_RESOURCES.items():
         if resources.get(resource_name):
-            print(resource_name)
             resource = resource_function(resources[resource_name])
             actions_before.append(resource[0])
             actions_after.append(resource[1])
@@ -201,7 +199,3 @@ def _load_file():
     serverless_yml_content = subprocess.check_output('sls print', shell=True)
 
     return yaml.safe_load(serverless_yml_content)
-
-
-def find_self_variables_to_replace(content):
-    return re.findall(r"(\${self:([a-zA-Z._\-]+)})", content)
