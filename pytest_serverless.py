@@ -6,6 +6,7 @@ import boto3
 from box import Box
 import pytest
 import yaml
+import subprocess
 
 _serverless_yml_dict = None
 
@@ -18,10 +19,10 @@ def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb2
 
     dynamodb = mock_dynamodb2()
+    print('DynamoDBResources', resources)
 
     def before():
         dynamodb.start()
-
         for resource_definition in resources:
             boto3.resource("dynamodb").create_table(
                 **_get_property(
@@ -178,6 +179,7 @@ def serverless():
 
     for resource_name, resource_function in SUPPORTED_RESOURCES.items():
         if resources.get(resource_name):
+            print(resource_name)
             resource = resource_function(resources[resource_name])
             actions_before.append(resource[0])
             actions_after.append(resource[1])
@@ -196,40 +198,10 @@ def _load_file():
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
 
-    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
-        serverless_yml_content = f.read()
-
-    serverless_yml_dict = replace_self_variables(
-        remove_env_variables(serverless_yml_content)
-    )
-
-    return serverless_yml_dict
-
-
-def find_self_variables_to_replace(content):
-    return re.findall(r"(\${self:([a-zA-Z._\-]+)})", content)
-
-
-def replace_self_variables(serverless_yml_content):
-    variables_to_replace = find_self_variables_to_replace(serverless_yml_content)
-    for variable in variables_to_replace:
-        my_box = Box.from_yaml(serverless_yml_content)
-        try:
-            value = str(eval(f"my_box.{variable[1]}"))
-            serverless_yml_content = serverless_yml_content.replace(variable[0], value)
-        except AttributeError:
-            pass
+    serverless_yml_content = subprocess.check_output('sls print', shell=True)
 
     return yaml.safe_load(serverless_yml_content)
 
 
-def find_env_variables_to_replace(content):
-    return re.findall(r"(\${env:([a-zA-Z._\-]+),?(.*)})", content)
-
-
-def remove_env_variables(serverless_yml_content):
-    variables_to_replace = find_env_variables_to_replace(serverless_yml_content)
-    for variable in variables_to_replace:
-        serverless_yml_content = serverless_yml_content.replace(variable[0], "")
-
-    return serverless_yml_content
+def find_self_variables_to_replace(content):
+    return re.findall(r"(\${self:([a-zA-Z._\-]+)})", content)
