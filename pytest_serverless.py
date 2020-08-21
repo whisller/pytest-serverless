@@ -153,6 +153,12 @@ def _handle_sns_topic(resources):
     return before, after
 
 
+# Set serverless framework yaml's variables to os.environ
+def set_serverless_variables(yml_dict):
+    for v, k in yml_dict['provider']['environment'].items():
+        os.environ[v] = k
+
+
 SUPPORTED_RESOURCES = {
     "AWS::DynamoDB::Table": _handle_dynamodb_table,
     "AWS::SQS::Queue": _handle_sqs_queue,
@@ -169,6 +175,9 @@ def serverless():
 
     actions_before = []
     actions_after = []
+
+    # Set environment variables from serverless.yml
+    set_serverless_variables(_serverless_yml_dict)
 
     resources = defaultdict(list)
     for resource_name, definition in (
