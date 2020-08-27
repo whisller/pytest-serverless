@@ -107,13 +107,18 @@ def _handle_s3_bucket(resources):
                 )
 
     def after():
-        s3_client = boto3.client("s3")
-
+        # s3_client = boto3.client("s3")
         for resource_definition in resources:
             if resource_definition["Properties"].get("BucketName"):
+                # When bucket in object, before method cannnot delete and throw error in this function.
+                bucket = boto3.resource('s3').Bucket(resource_definition["Properties"]["BucketName"])
+                bucket.objects.all().delete()
+                bucket.delete()
+                """
                 s3_client.delete_bucket(
                     Bucket=resource_definition["Properties"]["BucketName"]
                 )
+                """
 
         s3.stop()
 
