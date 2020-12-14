@@ -1,0 +1,33 @@
+name: Pull request
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.merge-master.outputs.commit }}
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.1.4
+      - name: Install project
+        run: |
+          poetry install --no-root
+          poetry run pip install pytest==6.2
+      - name: Run pytest
+        run: |
+          poetry run pytest
