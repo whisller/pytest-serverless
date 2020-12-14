@@ -61,7 +61,7 @@ class TestSns:
         topic_arns = [arn["TopicArn"] for arn in sns_client.list_topics()["Topics"]]
 
         assert (
-            "arn:aws:sns:eu-west-1:123456789012:org-example-my-sns-topic" in topic_arns
+            "arn:aws:sns:us-east-1:123456789012:org-example-my-sns-topic" in topic_arns
         )
 
 
