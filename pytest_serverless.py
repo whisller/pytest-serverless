@@ -166,6 +166,9 @@ def serverless():
     if not _serverless_yml_dict:
         _serverless_yml_dict = _load_file()
 
+    for k, v in _serverless_yml_dict["provider"].get("environment", {}).items():
+        os.environ[k] = v
+
     actions_before = []
     actions_after = []
 
@@ -198,10 +201,10 @@ def _load_file():
     if not which("sls"):
         raise Exception("No sls executable found!")
 
-    result = subprocess.run(['sls', 'print'], stdout=subprocess.PIPE)
+    result = subprocess.run(["sls", "print"], stdout=subprocess.PIPE)
     serverless_content = result.stdout.decode("utf-8").replace(
         'Serverless: Running "serverless" installed locally (in service node_modules)\n',
-        ""
+        "",
     )
 
     return yaml.safe_load(serverless_content)
