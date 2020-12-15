@@ -1,27 +1,21 @@
 pytest-serverless
 ---
-Automatically mocks resources from serverless.yml in pytest using moto.
+Automatically mocks resources defined in serverless.yml file using [moto](https://github.com/spulec/moto) and uses them in [pytest](https://github.com/pytest-dev/pytest).
+
+This way you can focus on writing tests rather than defining enormous list of fixtures.
 
 | master | PyPI | Python | pytest | Licence |
 | --- | --- | --- | --- | --- |
 | ![Master](https://github.com/whisller/pytest-serverless/workflows/Master/badge.svg) | [![PyPI](https://img.shields.io/pypi/v/pytest-serverless.svg)](https://pypi.org/project/pytest-serverless/) | ![](https://img.shields.io/pypi/pyversions/pytest-serverless.svg) | `6.2` | ![](https://img.shields.io/pypi/l/pytest-serverless.svg) |
 
+## Pre installation requirements
+- `serverless` installed
+- `pytest` installed
 
 ## Installation
 ```sh
 pip install pytest-serverless
 ```
-
-Your project has to have `pytest` installed.
-
-## What problem it tries to solve?
-When building your project with [serverless](https://serverless.com/) most likely you will create
-[resources](https://serverless.com/framework/docs/providers/aws/guide/resources/) like dynamodb tables, sqs queues, sns topics.
-
-During writing tests you will have to mock those in [moto](https://github.com/spulec/moto). 
-
-This pytest plugin tries to automate this process by reading `serverless.yml` file and create
-moto mocks of resources for you.
 
 ## Usage
 Assuming your `serverless.yml` file looks like:
@@ -57,7 +51,7 @@ resources:
          WriteCapacityUnits: 30
 ```
 
-To start using `my-microservice.my-table` table in your tests just mark your test with `@pytest.mark.usefixtures("serverless")`, and rest will be done by plugin.
+Just mark your test with `@pytest.mark.usefixtures("serverless")` and `pytest-serverless` will automatically create `my-microservice.my-table` dynamodb table.
 ```python
 import boto3
 import pytest
@@ -75,8 +69,3 @@ def test():
 ### AWS::SQS::Queue
 ### AWS::SNS::Topic
 ### AWS::S3::Bucket
-
-## Issues?
-Plugin is in early stage of development, so you might find some bugs or missing functionality.
-
-If possible create pull request (with tests) that fixes particular problem.
