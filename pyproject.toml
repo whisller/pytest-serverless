@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-serverless"
-version = "0.11.0"
+version = "0.12.0"
 description = "Automatically mocks resources from serverless.yml in pytest using moto."
 authors = ["Daniel Ancuta <whisller@gmail.com>"]
 readme = "README.md"
