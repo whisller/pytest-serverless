@@ -53,6 +53,21 @@ class TestS3:
 
         assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
+    @pytest.mark.usefixtures("serverless")
+    def test_it_removes_s3_bucket_even_if_it_contains_objects(self):
+        """
+        This test will fail with if we correctly not clean up bucket:
+        botocore.exceptions.ClientError: An error occurred (BucketNotEmpty) when calling the DeleteBucket operation: The bucket you tried to delete is not empty
+        """
+        s3_client = boto3.client("s3")
+        s3_client.put_object(
+            Body="HappyFace.jpg",
+            Bucket="org-example.my-bucket",
+            Key="HappyFace.jpg",
+            ServerSideEncryption="AES256",
+            StorageClass="STANDARD_IA",
+        )
+
 
 class TestSns:
     @pytest.mark.usefixtures("serverless")
