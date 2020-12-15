@@ -107,15 +107,14 @@ def _handle_s3_bucket(resources):
                 )
 
     def after():
-        s3_client = boto3.client("s3")
+        s3_resource = boto3.resource("s3")
 
         for resource_definition in resources:
             if resource_definition["Properties"].get("BucketName"):
-                s3_client.delete_bucket(
-                    Bucket=resource_definition["Properties"]["BucketName"]
+                bucket = s3_resource.Bucket(
+                    resource_definition["Properties"]["BucketName"]
                 )
-
-        s3.stop()
+                bucket.object_versions.delete()
 
     return before, after
 
