@@ -1,3 +1,5 @@
+import os
+
 import boto3
 import pytest
 
@@ -5,6 +7,9 @@ import pytest
 class TestGeneral:
     @pytest.mark.usefixtures("serverless")
     def test_it_replaces_local_variable_with_its_value(self):
+        """
+        This test checks if `${self:service}` from `serverless.yml` will be replaced with `my-microservice` value
+        """
         table = boto3.resource("dynamodb").Table("my-microservice.my-table")
         count_of_items = len(table.scan()["Items"])
         assert count_of_items == 0
@@ -12,6 +17,10 @@ class TestGeneral:
         table.put_item(Item={"id": "my-id"})
         count_of_items = len(table.scan()["Items"])
         assert count_of_items == 1
+
+    @pytest.mark.usefixtures("serverless")
+    def test_it_sets_environment_variables_defined_in_serverless_yml_file(self):
+        assert os.environ.get("SERVICE") == "my-microservice"
 
 
 class TestDynamoDb:
