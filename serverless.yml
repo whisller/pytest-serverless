@@ -1,4 +1,7 @@
 service: my-microservice
+provider:
+  name: aws
+  runtime: python3.8
 resources:
  Resources:
    EventQueue:

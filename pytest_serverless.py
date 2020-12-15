@@ -1,9 +1,9 @@
 import os
-import re
+import subprocess
 from collections import defaultdict
+from shutil import which
 
 import boto3
-from box import Box
 import pytest
 import yaml
 
@@ -195,40 +195,13 @@ def _load_file():
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
 
-    with open(os.path.join(os.getcwd(), "serverless.yml")) as f:
-        serverless_yml_content = f.read()
+    if not which("sls"):
+        raise Exception("No sls executable found!")
 
-    serverless_yml_dict = replace_self_variables(
-        remove_env_variables(serverless_yml_content)
+    result = subprocess.run(['sls', 'print'], stdout=subprocess.PIPE)
+    serverless_content = result.stdout.decode("utf-8").replace(
+        'Serverless: Running "serverless" installed locally (in service node_modules)\n',
+        ""
     )
 
-    return serverless_yml_dict
-
-
-def find_self_variables_to_replace(content):
-    return re.findall(r"(\${self:([a-zA-Z._\-]+)})", content)
-
-
-def replace_self_variables(serverless_yml_content):
-    variables_to_replace = find_self_variables_to_replace(serverless_yml_content)
-    for variable in variables_to_replace:
-        my_box = Box.from_yaml(serverless_yml_content)
-        try:
-            value = str(eval(f"my_box.{variable[1]}"))
-            serverless_yml_content = serverless_yml_content.replace(variable[0], value)
-        except AttributeError:
-            pass
-
-    return yaml.safe_load(serverless_yml_content)
-
-
-def find_env_variables_to_replace(content):
-    return re.findall(r"(\${env:([a-zA-Z._\-]+),?(.*)})", content)
-
-
-def remove_env_variables(serverless_yml_content):
-    variables_to_replace = find_env_variables_to_replace(serverless_yml_content)
-    for variable in variables_to_replace:
-        serverless_yml_content = serverless_yml_content.replace(variable[0], "")
-
-    return serverless_yml_content
+    return yaml.safe_load(serverless_content)
