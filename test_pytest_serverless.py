@@ -79,3 +79,10 @@ class TestSns:
         assert (
             "arn:aws:sns:us-east-1:123456789012:org-example-my-sns-topic" in topic_arns
         )
+
+
+class TestKms:
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_kms_key(self):
+        kms_client = boto3.client("kms")
+        kms_client.list_keys()

@@ -69,3 +69,4 @@ def test():
 ### AWS::SQS::Queue
 ### AWS::SNS::Topic
 ### AWS::S3::Bucket
+### AWS::KMS::Key

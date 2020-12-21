@@ -152,11 +152,29 @@ def _handle_sns_topic(resources):
     return before, after
 
 
+def _handle_kms_key(resources):
+    from moto import mock_kms
+
+    kms = mock_kms()
+
+    def before():
+        kms.start()
+
+        for resource_definition in resources:
+            boto3.client("kms").create_key(**resource_definition["Properties"])
+
+    def after():
+        kms.stop()
+
+    return before, after
+
+
 SUPPORTED_RESOURCES = {
     "AWS::DynamoDB::Table": _handle_dynamodb_table,
     "AWS::SQS::Queue": _handle_sqs_queue,
     "AWS::S3::Bucket": _handle_s3_bucket,
     "AWS::SNS::Topic": _handle_sns_topic,
+    "AWS::KMS::Key": _handle_kms_key,
 }
 
 
