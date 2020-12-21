@@ -33,6 +33,9 @@ jobs:
         run: |
           poetry install --no-root
           poetry run pip install pytest==6.2
+      - name: Run black
+        run: |
+          poetry run black --check
       - name: Run pytest
         run: |
           poetry run pytest
