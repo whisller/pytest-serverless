@@ -161,7 +161,19 @@ def _handle_kms_key(resources):
         kms.start()
 
         for resource_definition in resources:
-            boto3.client("kms").create_key(**resource_definition["Properties"])
+            params = _get_property(
+                resource_definition["Properties"], ("Description", "KeyUsage", "Tags")
+            )
+
+            if "KeyPolicy" in resource_definition["Properties"]:
+                params["Policy"] = resource_definition["Properties"]["KeyPolicy"]
+
+            if "KeySpec" in resource_definition["Properties"]:
+                params["CustomerMasterKeySpec"] = resource_definition["Properties"][
+                    "KeySpec"
+                ]
+
+            boto3.client("kms").create_key(**params)
 
     def after():
         kms.stop()
