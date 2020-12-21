@@ -88,3 +88,7 @@ resources:
      Type: 'AWS::SNS::Topic'
      Properties:
        TopicName: "org-example-my-sns-topic"
+   KMSKey:
+     Type: AWS::KMS::Key
+     Properties:
+       Description: An example symmetric CMK
