@@ -231,7 +231,10 @@ def _load_file():
     if not which("sls"):
         raise Exception("No sls executable found!")
 
-    result = subprocess.run(["sls", "print"], stdout=subprocess.PIPE)
+    env = os.environ.copy()
+    env["SLS_DEPRECATION_DISABLE"] = "*"
+    env["SLS_WARNING_DISABLE"] = "*"
+    result = subprocess.run([ "sls", "print"], stdout=subprocess.PIPE, env=env)
     serverless_content = result.stdout.decode("utf-8").replace(
         'Serverless: Running "serverless" installed locally (in service node_modules)\n',
         "",
