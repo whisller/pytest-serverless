@@ -6,6 +6,7 @@ from shutil import which
 import boto3
 import pytest
 import yaml
+from yaml.scanner import ScannerError
 
 _serverless_yml_dict = None
 
@@ -234,10 +235,15 @@ def _load_file():
     env = os.environ.copy()
     env["SLS_DEPRECATION_DISABLE"] = "*"
     env["SLS_WARNING_DISABLE"] = "*"
-    result = subprocess.run([ "sls", "print"], stdout=subprocess.PIPE, env=env)
+    result = subprocess.run(["sls", "print"], stdout=subprocess.PIPE, env=env)
     serverless_content = result.stdout.decode("utf-8").replace(
         'Serverless: Running "serverless" installed locally (in service node_modules)\n',
         "",
     )
 
-    return yaml.safe_load(serverless_content)
+    try:
+        return yaml.safe_load(serverless_content)
+    except ScannerError as e:
+        pytest.fail(
+            f"serverless.yml is wrongly formatted, pytest-serverless is unable to load it: {e}"
+        )
