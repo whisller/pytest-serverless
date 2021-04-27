@@ -64,6 +64,12 @@ def test():
     assert count_of_items == 0
 ```
 
+You can use a custom serverless file path setting the envionmnet variable `SERVERLESS_FILE_PATH`.
+
+```shell
+$ export SERVERLESS_FILE_PATH=/path/to/serverless.yml
+```
+
 ## Supported resources
 ### AWS::DynamoDB::Table
 ### AWS::SQS::Queue
