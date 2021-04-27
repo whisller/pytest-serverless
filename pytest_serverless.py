@@ -225,7 +225,9 @@ def serverless():
 
 
 def _load_file():
-    is_serverless = os.path.isfile("serverless.yml")
+    serverless_path = os.environ.get("SERVERLESS_FILE_PATH", "serverless.yml")
+
+    is_serverless = os.path.isfile(serverless_path)
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
 
@@ -235,7 +237,7 @@ def _load_file():
     env = os.environ.copy()
     env["SLS_DEPRECATION_DISABLE"] = "*"
     env["SLS_WARNING_DISABLE"] = "*"
-    result = subprocess.run(["sls", "print"], stdout=subprocess.PIPE, env=env)
+    result = subprocess.run(["sls", "print", "--config", serverless_path], stdout=subprocess.PIPE, env=env)
     serverless_content = result.stdout.decode("utf-8").replace(
         'Serverless: Running "serverless" installed locally (in service node_modules)\n',
         "",
