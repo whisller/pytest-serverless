@@ -232,7 +232,7 @@ def _load_file():
     if not is_serverless:
         raise Exception("No serverless.yml file found!")
 
-    if serverless_command != "sls" and serverless_command != "serverless":
+    if serverless_command not in ("sls", "serverless"):
         raise Exception("Command %s not releated to serverless" % serverless_command)
 
     if not which(serverless_command):
