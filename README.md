@@ -73,9 +73,7 @@ $ export SERVERLESS_FILE_PATH=/path/to/serverless.yml
 You can use choose both `sls` or `serverless` command to run, settings the environment variable `SERVERLESS_COMMAND`. It will only accpets `sls` or `serverless` values.
 
 ```shell
-$ export SERVERLESS_FILE_PATH=sls
-
-$ export SERVERLESS_FILE_PATH=serverless
+$ export SERVERLESS_COMMAND=sls
 ```
 
 ## Supported resources
