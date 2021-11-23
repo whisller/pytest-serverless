@@ -6,6 +6,7 @@ from shutil import which
 import boto3
 import pytest
 import yaml
+from re import sub
 from yaml.scanner import ScannerError
 
 _serverless_yml_dict = None
@@ -242,10 +243,7 @@ def _load_file():
     env["SLS_DEPRECATION_DISABLE"] = "*"
     env["SLS_WARNING_DISABLE"] = "*"
     result = subprocess.run([serverless_command, "print", "--config", serverless_path], stdout=subprocess.PIPE, env=env)
-    serverless_content = result.stdout.decode("utf-8").replace(
-        'Serverless: Running "serverless" installed locally (in service node_modules)\n',
-        "",
-    )
+    serverless_content = sub(r'Serverless: [^\n]*\n', "", result.stdout.decode("utf-8"))
 
     try:
         return yaml.safe_load(serverless_content)
