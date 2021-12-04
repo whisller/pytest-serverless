@@ -12,7 +12,13 @@ custom:
   my_dynamic_bucket_name: !Join ["-", ["${self:service}", "bucket"]]
   my_dynamic_queue_name: !Join ["-", ["${self:service}", "queue"]]
   my_dynamic_table_name: !Join ["-", ["${self:service}", "table"]]
-  my_dynamic_topic_name: !Join ["-", ["${self:service}", "topic"]]
+  my_dynamic_topic_name:
+    Fn::Transform:
+      - Name: "String"
+        Parameters:
+          InputString: "${self:service}-topic"
+          Operation: "MaxLength"
+          Length: 10
 resources:
  Resources:
    EventQueue:
