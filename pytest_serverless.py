@@ -17,7 +17,7 @@ def _get_property(properties, property_names):
 
 
 def _safe_string(value):
-    return sub(r'[^a-zA-Z0-9.\-_]', '', str(value))
+    return sub(r'[^a-zA-Z0-9.\-_]', '', str(value)) if not isinstance(value, str) else value
 
 
 def _get_string_property(properties, property_names):
