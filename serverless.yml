@@ -20,98 +20,100 @@ custom:
           Operation: "MaxLength"
           Length: 10
 resources:
- Resources:
-   EventQueue:
-     Type: "AWS::SQS::Queue"
-     Properties:
-       QueueName: my-super-queue
-   EventQueue2:
-     Type: "AWS::SQS::Queue"
-     Properties:
-       QueueName: "${self:custom.my_dynamic_queue_name}"
-       DelaySeconds: 0
-       FifoQueue: false
-       KmsDataKeyReusePeriodSeconds: 300
-       MaximumMessageSize: 262144
-       MessageRetentionPeriod: 2000
-       ReceiveMessageWaitTimeSeconds: 0
-       RedrivePolicy:
-         deadLetterTargetArn : "arn:aws:sqs:us-east-2:444455556666:queue1"
-         maxReceiveCount : 1
-       Tags:
-         -
-           key: "key1"
-           value: "value1"
-       VisibilityTimeout: 1000
-   TableA:
-     Type: 'AWS::DynamoDB::Table'
-     DeletionPolicy: Delete
-     Properties:
-       TableName: ${self:service}.my-table
-       AttributeDefinitions:
-         - AttributeName: id
-           AttributeType: S
-         - AttributeName: company_id
-           AttributeType: S
-       KeySchema:
-         - AttributeName: id
-           KeyType: HASH
-       GlobalSecondaryIndexes:
-         - IndexName: company_id
-           KeySchema:
-             - AttributeName: company_id
-               KeyType: HASH
-           Projection:
-             ProjectionType: ALL
-           ProvisionedThroughput:
-             ReadCapacityUnits: 10
-             WriteCapacityUnits: 30
-       ProvisionedThroughput:
-         ReadCapacityUnits: 10
-         WriteCapacityUnits: 30
-   TableB:
-     Type: 'AWS::DynamoDB::Table'
-     DeletionPolicy: Delete
-     Properties:
-       TableName: "${self:custom.my_dynamic_table_name}"
-       AttributeDefinitions:
-         - AttributeName: id
-           AttributeType: S
-         - AttributeName: company_id
-           AttributeType: S
-       KeySchema:
-         - AttributeName: id
-           KeyType: HASH
-       GlobalSecondaryIndexes:
-         - IndexName: company_id
-           KeySchema:
-             - AttributeName: company_id
-               KeyType: HASH
-           Projection:
-             ProjectionType: ALL
-           ProvisionedThroughput:
-             ReadCapacityUnits: 10
-             WriteCapacityUnits: 30
-       ProvisionedThroughput:
-         ReadCapacityUnits: 10
-         WriteCapacityUnits: 30
-   S3Bucket:
-     Type: 'AWS::S3::Bucket'
-     Properties:
-       BucketName: "org-example.my-bucket"
-   DynamicS3Bucket:
-     Type: 'AWS::S3::Bucket'
-     Properties:
-       BucketName: "${self:custom.my_dynamic_bucket_name}"
-   SnsTopic:
-     Type: 'AWS::SNS::Topic'
-     Properties:
-       TopicName: "org-example-my-sns-topic"
-   DynamicSnsTopic:
-     Type: 'AWS::SNS::Topic'
-     Properties:
-       TopicName: "${self:custom.my_dynamic_topic_name}"
-   KMSKey:
-     Type: AWS::KMS::Key
-     Properties:
-       Description: An example symmetric CMK
+  Resources:
+    EventQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: my-super-queue
+    EventQueue2:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "${self:custom.my_dynamic_queue_name}"
+        DelaySeconds: 0
+        FifoQueue: false
+        KmsDataKeyReusePeriodSeconds: 300
+        MaximumMessageSize: 262144
+        MessageRetentionPeriod: 2000
+        ReceiveMessageWaitTimeSeconds: 0
+        RedrivePolicy:
+          deadLetterTargetArn : "arn:aws:sqs:us-east-2:444455556666:queue1"
+          maxReceiveCount : 1
+        Tags:
+          -
+            key: "key1"
+            value: "value1"
+        VisibilityTimeout: 1000
+    TableA:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        TableName: ${self:service}.my-table
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: company_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: company_id
+            KeySchema:
+              - AttributeName: company_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 10
+              WriteCapacityUnits: 30
+        ProvisionedThroughput:
+          ReadCapacityUnits: 10
+          WriteCapacityUnits: 30
+        StreamSpecification:
+          StreamViewType: "NEW_AND_OLD_IMAGES"
+    TableB:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        TableName: "${self:custom.my_dynamic_table_name}"
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: company_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: company_id
+            KeySchema:
+              - AttributeName: company_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 10
+              WriteCapacityUnits: 30
+        ProvisionedThroughput:
+          ReadCapacityUnits: 10
+          WriteCapacityUnits: 30
+    S3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: "org-example.my-bucket"
+    DynamicS3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: "${self:custom.my_dynamic_bucket_name}"
+    SnsTopic:
+      Type: 'AWS::SNS::Topic'
+      Properties:
+        TopicName: "org-example-my-sns-topic"
+    DynamicSnsTopic:
+      Type: 'AWS::SNS::Topic'
+      Properties:
+        TopicName: "${self:custom.my_dynamic_topic_name}"
+    KMSKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: An example symmetric CMK

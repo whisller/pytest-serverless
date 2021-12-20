@@ -34,7 +34,7 @@ def _handle_dynamodb_table(resources):
         dynamodb.start()
 
         for resource_definition in resources:
-            boto3.resource("dynamodb").create_table(
+            table_properties = {
                 **_get_string_property(
                     resource_definition["Properties"],
                     ["TableName"]
@@ -53,7 +53,13 @@ def _handle_dynamodb_table(resources):
                         "Tags",
                     ),
                 )
-            )
+            }
+
+            # boto requires StreamEnabled but Cloudformation doesn't support it so it won't be in serverless.yml
+            if 'StreamSpecification' in table_properties:
+                table_properties['StreamSpecification']['StreamEnabled'] = True
+
+            boto3.resource("dynamodb").create_table(**table_properties)
 
     def after():
         for resource_definition in resources:
