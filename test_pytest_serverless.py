@@ -22,13 +22,24 @@ class TestGeneral:
     def test_it_sets_environment_variables_defined_in_serverless_yml_file(self):
         assert os.environ.get("SERVICE") == "my-microservice"
 
+    @pytest.mark.usefixtures("serverless")
+    def test_it_sets_dynamic_environment_variables_defined_in_serverless_yml_file(self):
+        assert os.environ.get("MY_DYNAMIC_TABLE_NAME") == "FnJoin-my-microservicetable"
 
 class TestDynamoDb:
-    @pytest.mark.parametrize(
-        "table_name", ["my-microservice.my-table", "my-microservice-second.my-table"]
-    )
     @pytest.mark.usefixtures("serverless")
-    def test_it_creates_database_tables(self, table_name):
+    def test_it_creates_database_tables(self):
+        table = boto3.resource("dynamodb").Table("my-microservice.my-table")
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 0
+
+        table.put_item(Item={"id": "my-id"})
+        count_of_items = len(table.scan()["Items"])
+        assert count_of_items == 1
+
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_dynamically_named_database_tables(self):
+        table_name = os.environ.get('MY_DYNAMIC_TABLE_NAME')
         table = boto3.resource("dynamodb").Table(table_name)
         count_of_items = len(table.scan()["Items"])
         assert count_of_items == 0
@@ -45,12 +56,27 @@ class TestSqs:
         response = sqs_client.get_queue_url(QueueName="my-super-queue")
         assert "my-super-queue" in response["QueueUrl"]
 
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_dynamically_named_sqs_queue(self):
+        sqs_client = boto3.client("sqs")
+        queue_name = os.environ.get('MY_DYNAMIC_QUEUE_NAME')
+        response = sqs_client.get_queue_url(QueueName=queue_name)
+        assert response["QueueUrl"] == f"https://queue.amazonaws.com/123456789012/{queue_name}"
+
 
 class TestS3:
     @pytest.mark.usefixtures("serverless")
     def test_it_creates_s3_bucket(self):
         s3_client = boto3.client("s3")
         response = s3_client.get_bucket_versioning(Bucket="org-example.my-bucket")
+
+        assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_dynamically_named_s3_bucket(self):
+        s3_client = boto3.client("s3")
+        bucket_name = os.environ.get('MY_DYNAMIC_BUCKET_NAME')
+        response = s3_client.get_bucket_versioning(Bucket=bucket_name)
 
         assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
@@ -78,6 +104,16 @@ class TestSns:
 
         assert (
             "arn:aws:sns:us-east-1:123456789012:org-example-my-sns-topic" in topic_arns
+        )
+
+    @pytest.mark.usefixtures("serverless")
+    def test_it_creates_dynamically_named_sns_topic(self):
+        sns_client = boto3.client("sns")
+        topic_name = os.environ.get('MY_DYNAMIC_TOPIC_NAME')
+        topic_arns = [arn["TopicArn"] for arn in sns_client.list_topics()["Topics"]]
+
+        assert (
+            f"arn:aws:sns:us-east-1:123456789012:{topic_name}" in topic_arns
         )
 
 

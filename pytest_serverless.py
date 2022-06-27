@@ -16,6 +16,15 @@ def _get_property(properties, property_names):
     return {name: properties[name] for name in property_names if name in properties}
 
 
+def _safe_string(value):
+    return sub(r'[^a-zA-Z0-9.\-_]', '', str(value)) if not isinstance(value, str) else value
+
+
+def _get_string_property(properties, property_names):
+    # Some properties must be strings, however they may be defined dynamically (i.e. Fn::Join)
+    return {name: _safe_string(properties[name]) for name in property_names if name in properties}
+
+
 def _handle_dynamodb_table(resources):
     from moto import mock_dynamodb
 
@@ -25,11 +34,14 @@ def _handle_dynamodb_table(resources):
         dynamodb.start()
 
         for resource_definition in resources:
-            boto3.resource("dynamodb").create_table(
+            table_properties = {
+                **_get_string_property(
+                    resource_definition["Properties"],
+                    ["TableName"]
+                ),
                 **_get_property(
                     resource_definition["Properties"],
                     (
-                        "TableName",
                         "AttributeDefinitions",
                         "KeySchema",
                         "LocalSecondaryIndexes",
@@ -41,12 +53,18 @@ def _handle_dynamodb_table(resources):
                         "Tags",
                     ),
                 )
-            )
+            }
+
+            # boto requires StreamEnabled but Cloudformation doesn't support it so it won't be in serverless.yml
+            if 'StreamSpecification' in table_properties:
+                table_properties['StreamSpecification']['StreamEnabled'] = True
+
+            boto3.resource("dynamodb").create_table(**table_properties)
 
     def after():
         for resource_definition in resources:
             boto3.client("dynamodb").delete_table(
-                TableName=resource_definition["Properties"]["TableName"]
+                **_get_string_property(resource_definition["Properties"], ["TableName"])
             )
 
         dynamodb.stop()
@@ -64,15 +82,16 @@ def _handle_sqs_queue(resources):
 
         for resource_definition in resources:
             boto3.resource("sqs").create_queue(
-                QueueName=resource_definition["Properties"]["QueueName"]
+                **_get_string_property(resource_definition["Properties"], ["QueueName"])
             )
 
     def after():
         sqs_client = boto3.client("sqs")
         for resource_definition in resources:
+
             sqs_client.delete_queue(
                 QueueUrl=sqs_client.get_queue_url(
-                    QueueName=resource_definition["Properties"]["QueueName"]
+                    **_get_string_property(resource_definition["Properties"], ["QueueName"])
                 )["QueueUrl"]
             )
 
@@ -90,9 +109,10 @@ def _handle_s3_bucket(resources):
         s3.start()
 
         for resource_definition in resources:
-            if resource_definition["Properties"].get("BucketName"):
+            bucket_name = resource_definition["Properties"].get("BucketName")
+            if bucket_name:
                 boto3.resource("s3").create_bucket(
-                    Bucket=resource_definition["Properties"]["BucketName"],
+                    Bucket=_safe_string(bucket_name),
                     **_get_property(
                         resource_definition["Properties"],
                         (
@@ -112,9 +132,10 @@ def _handle_s3_bucket(resources):
         s3_resource = boto3.resource("s3")
 
         for resource_definition in resources:
-            if resource_definition["Properties"].get("BucketName"):
+            bucket_name = resource_definition["Properties"].get("BucketName")
+            if bucket_name:
                 bucket = s3_resource.Bucket(
-                    resource_definition["Properties"]["BucketName"]
+                    _safe_string(bucket_name)
                 )
                 bucket.object_versions.delete()
 
@@ -130,9 +151,10 @@ def _handle_sns_topic(resources):
         sns.start()
 
         for resource_definition in resources:
-            if resource_definition["Properties"].get("TopicName"):
+            topic_name = resource_definition["Properties"].get("TopicName")
+            if topic_name:
                 boto3.resource("sns").create_topic(
-                    Name=resource_definition["Properties"]["TopicName"]
+                    Name=_safe_string(topic_name)
                 )
 
     def after():
@@ -144,9 +166,10 @@ def _handle_sns_topic(resources):
         }
 
         for resource_definition in resources:
-            if resource_definition["Properties"].get("TopicName"):
+            topic_name = resource_definition["Properties"].get("TopicName")
+            if topic_name:
                 sns_client.delete_topic(
-                    TopicArn=topic_arns[resource_definition["Properties"]["TopicName"]]
+                    TopicArn=topic_arns[_safe_string(topic_name)]
                 )
 
         sns.stop()
@@ -199,7 +222,7 @@ def serverless():
         _serverless_yml_dict = _load_file()
 
     for k, v in _serverless_yml_dict["provider"].get("environment", {}).items():
-        os.environ[k] = v
+        os.environ[k] = _safe_string(v)
 
     actions_before = []
     actions_after = []
