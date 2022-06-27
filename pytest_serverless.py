@@ -26,9 +26,9 @@ def _get_string_property(properties, property_names):
 
 
 def _handle_dynamodb_table(resources):
-    from moto import mock_dynamodb2
+    from moto import mock_dynamodb
 
-    dynamodb = mock_dynamodb2()
+    dynamodb = mock_dynamodb()
 
     def before():
         dynamodb.start()
